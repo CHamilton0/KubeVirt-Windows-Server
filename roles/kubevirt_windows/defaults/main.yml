@@ -1,0 +1,3 @@
+---
+kubevirt_windows_vm_name: windows-server-2022
+kubevirt_windows_namespace: vm

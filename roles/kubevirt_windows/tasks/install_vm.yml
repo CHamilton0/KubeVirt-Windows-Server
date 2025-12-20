@@ -1,0 +1,47 @@
+---
+- name: Install kubernetes module
+  ansible.builtin.pip:
+    name: kubernetes
+
+- name: Create VM namespace
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: "{{ kubevirt_windows_namespace }}"
+    state: present
+
+- name: Check if Python HTTP server is running on port 8000
+  ansible.builtin.command: lsof -i :8000
+  register: kubevirt_windows_http_server_check
+  ignore_errors: true
+  changed_when: false
+
+- name: Start Python HTTP server to serve ISOs if not running
+  ansible.builtin.shell: >
+    nohup python3 -m http.server 8000 > /tmp/isos-http.log 2>&1 &
+  args:
+    chdir: "{{ role_path }}/files/isos"
+  async: 1000
+  poll: 0
+  when: kubevirt_windows_http_server_check.rc != 0
+  changed_when: kubevirt_windows_http_server_check.rc != 0
+
+- name: Remove Windows VM with Helm
+  kubernetes.core.helm:
+    name: "{{ kubevirt_windows_vm_name }}"
+    namespace: "{{ kubevirt_windows_namespace }}"
+    release_state: absent
+
+- name: Pick the first 192.* IP address
+  ansible.builtin.set_fact:
+    kubevirt_windows_localhost_ip: "{{ ansible_all_ipv4_addresses | select('match', '^192\\.') | list | first }}"
+
+- name: Deploy Windows VM with Helm
+  kubernetes.core.helm:
+    name: "{{ kubevirt_windows_vm_name }}"
+    chart_ref: "{{ role_path }}/../../helm"
+    namespace: "{{ kubevirt_windows_namespace }}"
+    values:
+      isoURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/WindowsServer2022.iso"
+      virtioURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/virtio-win-0.1.285.iso"
+      unattendURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/unattend.iso"

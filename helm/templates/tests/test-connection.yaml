@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "windows-server-kubevirt.fullname" . }}-test-connection"
+  labels:
+    {{- include "windows-server-kubevirt.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "windows-server-kubevirt.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never

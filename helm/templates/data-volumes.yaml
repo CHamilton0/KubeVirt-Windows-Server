@@ -1,0 +1,49 @@
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: windows-server-iso
+spec:
+  source:
+    http:
+      url: "{{ .Values.isoURL }}"
+  pvc:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: {{ .Values.storage.isoSize }}
+    storageClassName: {{ .Values.storageClassName }}
+
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: virtio-drivers
+spec:
+  source:
+    http:
+      url: "{{ .Values.virtioURL }}"
+  pvc:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: {{ .Values.storage.virtioSize }}
+    storageClassName: {{ .Values.storageClassName }}
+
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: unattend-iso
+spec:
+  source:
+    http:
+      url: "{{ .Values.unattendURL }}"
+  pvc:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: {{ .Values.storage.unattendSize }}
+    storageClassName: {{ .Values.storageClassName }}

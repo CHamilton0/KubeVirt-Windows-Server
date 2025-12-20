@@ -1,0 +1,14 @@
+---
+- name: Install pycdlib module
+  ansible.builtin.pip:
+    name: pycdlib
+
+- name: Create ISO file for unattended Windows install
+  community.general.iso_create:
+    src_files:
+      - "{{ role_path }}/files/unattend/autounattend.xml"
+    dest_iso: "{{ role_path }}/files/isos/unattend.iso"
+    interchange_level: 3
+    joliet: 3
+    vol_ident: AUTOUNATTEND
+    rock_ridge: "1.09"

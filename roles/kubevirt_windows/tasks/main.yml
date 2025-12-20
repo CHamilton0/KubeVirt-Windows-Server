@@ -1,0 +1,9 @@
+---
+- name: Create Windows unattend install ISO
+  ansible.builtin.include_tasks: create_unattended_iso.yml
+
+- name: Download other ISOs
+  ansible.builtin.include_tasks: download_isos.yml
+
+- name: Install the Windows VM
+  ansible.builtin.include_tasks: install_vm.yml

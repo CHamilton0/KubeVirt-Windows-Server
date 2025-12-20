@@ -1,0 +1,67 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: {{ .Values.vmName }}
+  labels:
+    {{- toYaml .Values.vmLabels | nindent 4 }}
+spec:
+  runStrategy: {{ .Values.runStrategy }}
+  template:
+    metadata:
+      labels:
+        {{- toYaml .Values.vmLabels | nindent 8 }}
+    spec:
+      domain:
+        # Remove EFI firmware to use legacy BIOS (SeaBIOS)
+        firmware: {}
+        cpu:
+          cores: {{ .Values.cpu.cores }}
+        resources:
+          requests:
+            memory: "{{ .Values.memory }}"
+        devices:
+          disks:
+            # OS Disk (install target)
+            - name: os-disk
+              disk:
+                bus: virtio
+              bootOrder: 2
+
+            # Windows ISO for installation
+            - name: windows-iso
+              cdrom:
+                bus: sata
+              bootOrder: 1
+
+            # VirtIO drivers ISO
+            - name: virtio-drivers
+              cdrom:
+                bus: sata
+
+            # Unattend ISO
+            - name: unattend
+              cdrom:
+                bus: sata
+
+          interfaces:
+            - name: default
+              masquerade: {}
+              model: virtio
+
+      volumes:
+        - name: os-disk
+          persistentVolumeClaim:
+            claimName: os-pvc
+        - name: windows-iso
+          dataVolume:
+            name: windows-server-iso
+        - name: virtio-drivers
+          dataVolume:
+            name: virtio-drivers
+        - name: unattend
+          dataVolume:
+            name: unattend-iso
+
+      networks:
+        - name: default
+          pod: {}
