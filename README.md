@@ -1,5 +1,13 @@
 # KubeVirt Windows Server
 
+## Requirements
+
+- Python 3.11
+- Ansible
+- Helm
+- KubeVirt
+- Kubernetes
+
 ## Install the Helm Chart
 
 ```bash
