@@ -1,3 +1,5 @@
+---
+{{- if .Values.createInstallerDataVolumes }}
 apiVersion: cdi.kubevirt.io/v1beta1
 kind: DataVolume
 metadata:
@@ -13,8 +15,9 @@ spec:
       requests:
         storage: {{ .Values.storage.isoSize }}
     storageClassName: {{ .Values.storageClassName }}
-
+{{- end }}
 ---
+{{- if .Values.createInstallerDataVolumes }}
 apiVersion: cdi.kubevirt.io/v1beta1
 kind: DataVolume
 metadata:
@@ -30,8 +33,9 @@ spec:
       requests:
         storage: {{ .Values.storage.virtioSize }}
     storageClassName: {{ .Values.storageClassName }}
-
+{{- end }}
 ---
+{{- if .Values.createInstallerDataVolumes }}
 apiVersion: cdi.kubevirt.io/v1beta1
 kind: DataVolume
 metadata:
@@ -47,3 +51,4 @@ spec:
       requests:
         storage: {{ .Values.storage.unattendSize }}
     storageClassName: {{ .Values.storageClassName }}
+{{- end }}

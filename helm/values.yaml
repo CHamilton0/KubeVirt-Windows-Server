@@ -32,34 +32,45 @@ networks:
   - name: default
     pod: {}
 
-# Disks
 disks:
+  # Windows installer ISO (only used on first boot)
   - name: windows-iso
     cdrom:
       bus: sata
     bootOrder: 1
-  - name: os-disk
-    disk:
-      bus: virtio
-    bootOrder: 2
+
+  # VirtIO drivers
   - name: virtio-drivers
     cdrom:
       bus: sata
+
+  # Unattended install ISO
   - name: unattend
     cdrom:
       bus: sata
 
-# Data volumes
+  # OS disk
+  - name: os-disk
+    disk:
+      bus: virtio
+    bootOrder: 2
+
 volumes:
   - name: os-disk
     persistentVolumeClaim:
       claimName: os-pvc
+
   - name: windows-iso
     dataVolume:
       name: windows-server-iso
+
   - name: virtio-drivers
     dataVolume:
       name: virtio-drivers
+
   - name: unattend
     dataVolume:
       name: unattend-iso
+
+createInstallerDataVolumes: true
+createOSPVC: true

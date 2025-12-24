@@ -1,0 +1,57 @@
+- name: Create Windows ISO DataVolume
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: windows-server-iso
+        namespace: "{{ kubevirt_windows_namespace }}"
+      spec:
+        source:
+          http:
+            url: "{{ windows_iso_url }}"
+        pvc:
+          accessModes: [ReadWriteOnce]
+          storageClassName: "{{ kubevirt_windows_storage_class }}"
+          resources:
+            requests:
+              storage: 8Gi
+- name: Create virtio DataVolume
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: windows-server-iso
+        namespace: "{{ kubevirt_windows_namespace }}"
+      spec:
+        source:
+          http:
+            url: "{{ windows_iso_url }}"
+        pvc:
+          accessModes: [ReadWriteOnce]
+          storageClassName: "{{ kubevirt_windows_storage_class }}"
+          resources:
+            requests:
+              storage: 8Gi
+- name: Create unattend ISO DataVolume
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: windows-server-iso
+        namespace: "{{ kubevirt_windows_namespace }}"
+      spec:
+        source:
+          http:
+            url: "{{ unattend_url }}"
+        pvc:
+          accessModes: [ReadWriteOnce]
+          storageClassName: "{{ kubevirt_windows_storage_class }}"
+          resources:
+            requests:
+              storage: 8Gi

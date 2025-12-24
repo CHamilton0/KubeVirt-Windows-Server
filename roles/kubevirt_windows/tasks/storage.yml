@@ -1,0 +1,15 @@
+- name: Create OS disk PVC (empty, Windows will install here)
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: os-pvc
+        namespace: "{{ kubevirt_windows_namespace }}"
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: "{{ kubevirt_windows_storage_class }}"
+        resources:
+          requests:
+            storage: 40Gi
