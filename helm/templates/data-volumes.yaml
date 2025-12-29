@@ -52,3 +52,22 @@ spec:
         storage: {{ .Values.storage.unattendSize }}
     storageClassName: {{ .Values.storageClassName }}
 {{- end }}
+---
+{{- if not (.Values.createInstallerDataVolumes) }}
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: os-dv
+spec:
+  source:
+    http:
+      url: "{{ .Values.diskImageURL }}"
+      contentType: kubevirt
+  pvc:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: {{ .Values.storage.osDiskSize }}
+    storageClassName: {{ .Values.storageClassName }}
+{{- end }}

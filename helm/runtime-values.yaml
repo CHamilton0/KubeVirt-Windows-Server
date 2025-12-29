@@ -1,4 +1,4 @@
-vmName: "windows-server-2022"
+vmName: "windows-server-2022-runtime"
 
 # Disks for runtime VM
 disks:
@@ -10,13 +10,8 @@ disks:
 # Volumes for runtime VM
 volumes:
   - name: os-disk
-    persistentVolumeClaim:
-      claimName: os-pvc
-
-existingDataVolumes:
-  - name: windows-server-iso
-  - name: virtio-drivers
-  - name: unattend-iso
+    dataVolume:
+      name: os-dv
 
 createInstallerDataVolumes: false
 createOSPVC: false

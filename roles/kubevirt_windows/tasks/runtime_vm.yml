@@ -40,8 +40,7 @@
     namespace: "{{ kubevirt_windows_namespace }}"
     values_files:
       - "{{ role_path }}/../../helm/values.yaml"
+      - "{{ role_path }}/../../helm/runtime-values.yaml"
     values:
-      runStrategy: Once
-      isoURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/WindowsServer2022.iso"
-      virtioURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/virtio-win-0.1.285.iso"
-      unattendURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/unattend.iso"
+      runStrategy: Always
+      diskImageURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/disk2.img"

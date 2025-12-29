@@ -36,7 +36,8 @@ Session.vim
 
 .history
 
-# ISO files
+# Disk image files
 **/*.iso
+**/*.img
 
 .ansible
