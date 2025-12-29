@@ -36,6 +36,12 @@
             <ComputerName>DC-01</ComputerName>
             <TimeZone>Cen. Australia Standard Time</TimeZone>
             <ShowWindowsLive>false</ShowWindowsLive>
+            <UserAccounts>
+                <AdministratorPassword>
+                    <Value>Admin123!</Value>
+                    <PlainText>true</PlainText>
+                </AdministratorPassword>
+            </UserAccounts>
         </component>
         <component name="Microsoft-Windows-Security-SPP-UX" processorArchitecture="amd64"
             publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS"
@@ -48,6 +54,15 @@
             xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <CEIPEnabled>0</CEIPEnabled>
+        </component>
+        <component name="Microsoft-Windows-International-Core" processorArchitecture="amd64"
+            publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS"
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <InputLocale>en-US</InputLocale>
+            <SystemLocale>en-US</SystemLocale>
+            <UILanguage>en-US</UILanguage>
+            <UserLocale>en-US</UserLocale>
         </component>
     </settings>
     <settings pass="oobeSystem">
@@ -66,13 +81,12 @@
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <OOBE>
                 <HideEULAPage>true</HideEULAPage>
+                <HideLocalAccountScreen>true</HideLocalAccountScreen>
+                <HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+                <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+                <SkipMachineOOBE>true</SkipMachineOOBE>
+                <SkipUserOOBE>true</SkipUserOOBE>
             </OOBE>
-            <UserAccounts>
-                <AdministratorPassword>
-                    <Value>Admin123!</Value>
-                    <PlainText>true</PlainText>
-                </AdministratorPassword>
-            </UserAccounts>
             <AutoLogon>
                 <Username>Administrator</Username>
                 <Password>
@@ -82,6 +96,19 @@
                 <Enabled>true</Enabled>
                 <LogonCount>1</LogonCount>
             </AutoLogon>
+            <FirstLogonCommands>
+                <SynchronousCommand wcm:action="add">
+                    <Order>1</Order>
+                    <CommandLine>cmd /c copy D:\bootstrap.ps1 C:\Windows\Setup\Scripts\bootstrap.ps1</CommandLine>
+                    <Description>Copy bootstrap</Description>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
+                    <Order>2</Order>
+                    <CommandLine>powershell.exe -ExecutionPolicy Bypass -File
+                        C:\Windows\Setup\Scripts\bootstrap.ps1</CommandLine>
+                    <Description>Run bootstrap</Description>
+                </SynchronousCommand>
+            </FirstLogonCommands>
         </component>
     </settings>
     <settings pass="windowsPE">
@@ -161,6 +188,10 @@
             <SystemLocale>en-US</SystemLocale>
             <UILanguage>en-US</UILanguage>
             <UserLocale>en-US</UserLocale>
+
+            <SetupUILanguage>
+                <UILanguage>en-US</UILanguage>
+            </SetupUILanguage>
         </component>
         <component name="Microsoft-Windows-PnpCustomizationsWinPE"
             processorArchitecture="amd64"

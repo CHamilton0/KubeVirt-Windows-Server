@@ -71,3 +71,21 @@ spec:
         storage: {{ .Values.storage.osDiskSize }}
     storageClassName: {{ .Values.storageClassName }}
 {{- end }}
+---
+{{- if not (.Values.createInstallerDataVolumes) }}
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: specialise-iso
+spec:
+  source:
+    http:
+      url: "{{ .Values.specialiseURL }}"
+  pvc:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: {{ .Values.storage.unattendSize }}
+    storageClassName: {{ .Values.storageClassName }}
+{{- end }}

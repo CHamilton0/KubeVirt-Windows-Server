@@ -1,4 +1,19 @@
 ---
+# Create specliaise ISO
+- name: Install pycdlib module
+  ansible.builtin.pip:
+    name: pycdlib
+
+- name: Create specialise ISO for KubeVirt
+  community.general.iso_create:
+    src_files:
+      - "{{ role_path }}/files/specialise/bootstrap.ps1"
+    dest_iso: "{{ role_path }}/files/isos/specialise.iso"
+    interchange_level: 3
+    joliet: 3
+    vol_ident: AUTOUNATTEND
+    rock_ridge: "1.09"
+
 - name: Install Kubernetes Python module
   ansible.builtin.pip:
     name: kubernetes
@@ -44,3 +59,4 @@
     values:
       runStrategy: Always
       diskImageURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/disk2.img"
+      specialiseURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/specialise.iso"

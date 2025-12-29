@@ -7,11 +7,20 @@ disks:
       bus: virtio
     bootOrder: 1
 
+  # Unattended install ISO
+  - name: specialise
+    cdrom:
+      bus: sata
+
 # Volumes for runtime VM
 volumes:
   - name: os-disk
     dataVolume:
       name: os-dv
+
+  - name: specialise
+    dataVolume:
+      name: specialise-iso
 
 createInstallerDataVolumes: false
 createOSPVC: false
