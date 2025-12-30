@@ -45,3 +45,17 @@
       isoURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/WindowsServer2022.iso"
       virtioURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/virtio-win-0.1.285.iso"
       unattendURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/unattend.iso"
+
+- name: Wait for the installer VM to enter Succeeded phase
+  vars:
+    vmi_name: "{{ kubevirt_windows_vm_name }}"
+    ns: "{{ kubevirt_windows_namespace }}"
+  until: vmi_status.resources[0].status.phase == "Succeeded"
+  retries: 60
+  delay: 30
+  kubernetes.core.k8s_info:
+    api_version: kubevirt.io/v1
+    kind: VirtualMachineInstance
+    namespace: "{{ ns }}"
+    name: "{{ vmi_name }}"
+  register: vmi_status

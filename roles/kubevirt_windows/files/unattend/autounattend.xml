@@ -99,11 +99,17 @@
             <FirstLogonCommands>
                 <SynchronousCommand wcm:action="add">
                     <Order>1</Order>
+                    <CommandLine>reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v AutoLogonCount /t REG_DWORD /d 0 /f</CommandLine>
+                    <!-- https://learn.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/microsoft-windows-shell-setup-autologon-logoncount#logoncount-known-issue -->
+                    <Description>Fix logon count issue</Description>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
+                    <Order>2</Order>
                     <CommandLine>cmd /c copy D:\bootstrap.ps1 C:\Windows\Setup\Scripts\bootstrap.ps1</CommandLine>
                     <Description>Copy bootstrap</Description>
                 </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">
-                    <Order>2</Order>
+                    <Order>3</Order>
                     <CommandLine>powershell.exe -ExecutionPolicy Bypass -File
                         C:\Windows\Setup\Scripts\bootstrap.ps1</CommandLine>
                     <Description>Run bootstrap</Description>

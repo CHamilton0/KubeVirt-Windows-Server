@@ -42,12 +42,18 @@ if ($null -eq $ntds -or $ntds.Status -ne 'Running') {
     return
 }
 
-# CHANGED: second boot path (promotion finished)
 if ($ntds.Status -eq 'Running') {
     Write-Host "AD promotion complete"
 
     "BOOTSTRAP OK" | Out-File C:\bootstrap.txt
     New-Item -ItemType File $marker -Force
+
+    Write-Host "Disabling automatic logon..."
+    $winlogon = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"
+    Set-ItemProperty $winlogon AutoAdminLogon "0"
+    Remove-ItemProperty $winlogon DefaultPassword -ErrorAction SilentlyContinue
+    Remove-ItemProperty $winlogon DefaultUserName -ErrorAction SilentlyContinue
+    Remove-ItemProperty $winlogon DefaultDomainName -ErrorAction SilentlyContinue
 
     Stop-Transcript
     Restart-Computer -Force
