@@ -17,11 +17,6 @@ storage:
   virtioSize: 2Gi
   unattendSize: 10Mi
 
-# ISO locations (can be local HTTP server or remote URLs)
-isoURL: "http://127.0.0.1:8000/WindowsServer2022.iso"
-virtioURL: "http://127.0.0.1:8000/virtio-win-0.1.285.iso"
-unattendURL: "http://127.0.0.1:8000/unattend.iso"
-
 # VM Labels
 vmLabels:
   kubevirt.io/size: small
@@ -32,45 +27,24 @@ networks:
   - name: default
     pod: {}
 
+# Disks for runtime VM
 disks:
-  # Windows installer ISO (only used on first boot)
-  - name: windows-iso
-    cdrom:
-      bus: sata
-    bootOrder: 1
-
-  # VirtIO drivers
-  - name: virtio-drivers
-    cdrom:
-      bus: sata
-
-  # Unattended install ISO
-  - name: unattend
-    cdrom:
-      bus: sata
-
-  # OS disk
   - name: os-disk
     disk:
       bus: virtio
-    bootOrder: 2
+    bootOrder: 1
 
+  # Unattended install ISO
+  - name: specialise
+    cdrom:
+      bus: sata
+
+# Volumes for runtime VM
 volumes:
   - name: os-disk
-    persistentVolumeClaim:
-      claimName: os-pvc
-
-  - name: windows-iso
     dataVolume:
-      name: windows-server-iso
+      name: os-dv
 
-  - name: virtio-drivers
+  - name: specialise
     dataVolume:
-      name: virtio-drivers
-
-  - name: unattend
-    dataVolume:
-      name: unattend-iso
-
-createInstallerDataVolumes: true
-createOSPVC: true
+      name: specialise-iso
