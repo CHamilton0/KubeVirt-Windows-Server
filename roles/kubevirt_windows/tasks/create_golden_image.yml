@@ -243,7 +243,7 @@
     namespace: "{{ kubevirt_windows_namespace }}"
     pod: inspect-pvc
     remote_path: /mnt/os-pvc/disk.img
-    local_path: "{{ role_path }}/files/isos/disk2.img"
+    local_path: "{{ role_path }}/files/isos/golden.img"
     state: from_pod
 
 - name: Remove inspect PVC pod

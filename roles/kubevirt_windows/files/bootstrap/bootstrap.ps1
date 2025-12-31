@@ -1,8 +1,8 @@
 $marker = "C:\kubevirt_init.done"
 
 $computer_name = "DC-Root"
-$ip_address = 192.168.10.10
-$dns_address = 192.168.10.10
+$ip_address = "192.168.10.10"
+$dns_address = "192.168.10.10"
 $SecureAdminPass = ConvertTo-SecureString "Admin123!" -AsPlainText -Force
 $domain_name = "example.local"
 $domain_netbios_name = "EXAMPLE"
@@ -33,20 +33,8 @@ while (-not (Get-NetAdapter | Where-Object Status -eq Up)) {
     }
 }
 
-Write-Host "Configuring as Domain Controller..."
+Write-Host "Setting up post-reboot script"
 
-# Non-interactive feature install
-Install-WindowsFeature AD-Domain-Services -IncludeManagementTools -Confirm:$false -Restart:$false
-
-# Reliable DC detection
-Write-Host "Starting AD forest creation (will reboot)"
-Install-ADDSForest `
-    -DomainName $domain_name `
-    -DomainNetbiosName $domain_netbios_name `
-    -SafeModeAdministratorPassword $SecureAdminPass `
-    -InstallDNS `
-    -Force `
-    -NoRebootOnCompletion:$true
 
 $postRebootScript = @'
 # Commands to run after reboot
@@ -111,5 +99,17 @@ $postRebootScript | Out-File -FilePath "C:\Windows\Setup\Scripts\post-reboot.ps1
 $runOnceCommand = "powershell.exe -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\post-reboot.ps1"
 Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "PostRebootSetup" -Value $runOnceCommand
 
-# Trigger reboot
-Restart-Computer -Force
+Write-Host "Configuring as Domain Controller..."
+
+# Non-interactive feature install
+Install-WindowsFeature AD-Domain-Services -IncludeManagementTools -Confirm:$false -Restart:$false
+
+# Reliable DC detection
+Write-Host "Starting AD forest creation (will reboot)"
+Install-ADDSForest `
+    -DomainName $domain_name `
+    -DomainNetbiosName $domain_netbios_name `
+    -SafeModeAdministratorPassword $SecureAdminPass `
+    -InstallDNS `
+    -Force `
+    -NoRebootOnCompletion:$false

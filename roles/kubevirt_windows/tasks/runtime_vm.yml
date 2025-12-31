@@ -4,11 +4,11 @@
   ansible.builtin.pip:
     name: pycdlib
 
-- name: Create specialise ISO for KubeVirt
+- name: Create bootstrap ISO for KubeVirt
   community.general.iso_create:
     src_files:
-      - "{{ role_path }}/files/specialise/bootstrap.ps1"
-    dest_iso: "{{ role_path }}/files/isos/specialise.iso"
+      - "{{ role_path }}/files/bootstrap/bootstrap.ps1"
+    dest_iso: "{{ role_path }}/files/isos/bootstrap.iso"
     interchange_level: 3
     joliet: 3
     vol_ident: AUTOUNATTEND
@@ -57,5 +57,5 @@
       - "{{ role_path }}/../../helm/values.yaml"
     values:
       runStrategy: Always
-      diskImageURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/disk2.img"
-      specialiseURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/specialise.iso"
+      diskImageURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/golden.img"
+      bootstrapURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/bootstrap.iso"

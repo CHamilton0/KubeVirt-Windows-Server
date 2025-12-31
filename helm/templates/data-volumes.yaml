@@ -20,11 +20,11 @@ spec:
 apiVersion: cdi.kubevirt.io/v1beta1
 kind: DataVolume
 metadata:
-  name: specialise-iso
+  name: bootstrap-iso
 spec:
   source:
     http:
-      url: "{{ .Values.specialiseURL }}"
+      url: "{{ .Values.bootstrapURL }}"
   pvc:
     accessModes:
       - ReadWriteOnce

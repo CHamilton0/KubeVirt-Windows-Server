@@ -35,7 +35,7 @@ disks:
     bootOrder: 1
 
   # Unattended install ISO
-  - name: specialise
+  - name: bootstrap
     cdrom:
       bus: sata
 
@@ -45,6 +45,6 @@ volumes:
     dataVolume:
       name: os-dv
 
-  - name: specialise
+  - name: bootstrap
     dataVolume:
-      name: specialise-iso
+      name: bootstrap-iso
