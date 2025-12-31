@@ -11,7 +11,7 @@
 ## Install the Helm Chart
 
 ```bash
-ansible-playbook playbooks/windows-vm.yml
+ansible-playbook playbooks/windows-vm.yml --ask-vault-pass
 virtctl vnc -n vm windows-server-2022
 ```
 

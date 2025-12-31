@@ -2,7 +2,7 @@
 
 # VM configuration
 vmName: "windows-server-2022"
-runStrategy: Always
+runStrategy: Manual
 
 # Resources
 cpu:
@@ -39,6 +39,14 @@ disks:
     cdrom:
       bus: sata
 
+  - name: secret-vol
+    cdrom:
+      bus: sata
+
+  - name: virtio-drivers
+    cdrom:
+      bus: sata
+
 # Volumes for runtime VM
 volumes:
   - name: os-disk
@@ -48,3 +56,12 @@ volumes:
   - name: bootstrap
     dataVolume:
       name: bootstrap-iso
+
+  - name: secret-vol
+    secret:
+      secretName: admin-password
+
+  - name: virtio-drivers
+    containerDisk:
+      # Use the official Fedora/KubeVirt virtio-win image
+      image: quay.io/kubevirt/virtio-container-disk:latest

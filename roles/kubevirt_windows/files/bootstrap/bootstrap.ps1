@@ -4,10 +4,26 @@ $stateFile = "C:\Windows\Setup\Scripts\bootstrap-state.txt"
 $computer_name = "DC-Root"
 $ip_address = "192.168.10.10"
 $dns_address = "192.168.10.10"
-$admin_password = "Admin123!"
-$SecureAdminPass = ConvertTo-SecureString $admin_password -AsPlainText -Force
 $domain_name = "example.local"
 $domain_netbios_name = "EXAMPLE"
+
+function Get-AdminPassword {
+    # We look for a file named "admin-password" on all attached non-system drives
+    # KubeVirt mounts Secrets as volumes, which appear as disks in Windows
+    $drives = Get-PSDrive -PSProvider FileSystem | Where-Object { $_.Name -ne "C" } 
+    
+    foreach ($drive in $drives) {
+        $path = "$($drive.Root)admin-password"
+        if (Test-Path $path) {
+            Write-Host "Found password file on drive $($drive.Name)"
+            return (Get-Content $path -Raw).Trim()
+        }
+    }
+    throw "CRITICAL: Could not find 'admin-password' file on any attached volume."
+}
+
+$admin_password = Get-AdminPassword
+$SecureAdminPass = ConvertTo-SecureString $admin_password -AsPlainText -Force
 
 # Function to enable auto-logon
 function Enable-AutoLogon {
@@ -46,6 +62,28 @@ if (Test-Path $stateFile) {
 
 switch ($state) {
     "initial-setup" {
+        Write-Host "Installing VirtIO Guest Agent..."
+        
+        # 1. Find the drive containing the VirtIO drivers
+        # We look for the 'guest-agent' folder or the specific MSI
+        $virtioDrive = (Get-PSDrive -PSProvider FileSystem).Root | Where-Object { 
+            Test-Path "$($_.TrimEnd('\'))\guest-agent\qemu-ga-x86_64.msi" 
+        }
+
+        if ($virtioDrive) {
+            $msiPath = "$($virtioDrive.TrimEnd('\'))\guest-agent\qemu-ga-x86_64.msi"
+            Write-Host "Found installer at $msiPath. Installing..."
+            
+            # 2. Run the MSI silently
+            Start-Process msiexec.exe -ArgumentList "/i `"$msiPath`" /qn /norestart" -Wait
+            
+            # 3. Force start the service
+            Start-Sleep -Seconds 5
+            Start-Service QEMU-GA -ErrorAction SilentlyContinue
+        } else {
+            Write-Warning "VirtIO Guest Agent installer not found on any drive."
+        }
+
         Write-Host "Setting computer name..."
 
         $interface = (Get-NetAdapter | Where-Object Status -eq "Up")[0].Name
@@ -147,6 +185,9 @@ switch ($state) {
         
         Write-Host "Bootstrap complete! Manual login required from now on."
 
-        Restart-Computer -Force
+        # Create the sentinel file to signal Ansible
+        $sentinelPath = "C:\bootstrap-finished.txt"
+        "Bootstrap completed at $(Get-Date)" | Out-File -FilePath $sentinelPath
+        Stop-Computer -Force
     }
 }
