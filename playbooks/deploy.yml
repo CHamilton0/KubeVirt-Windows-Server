@@ -1,0 +1,6 @@
+---
+- name: Deploy instance
+  hosts: localhost
+  roles:
+    - common
+    - windows_instance

@@ -7,8 +7,8 @@
 - name: Create bootstrap ISO for KubeVirt
   community.general.iso_create:
     src_files:
-      - "{{ role_path }}/files/bootstrap/bootstrap.ps1"
-    dest_iso: "{{ role_path }}/files/isos/bootstrap.iso"
+      - "{{ role_path }}/../common/files/bootstrap/bootstrap.ps1"
+    dest_iso: "{{ role_path }}/../common/files/isos/bootstrap.iso"
     interchange_level: 3
     joliet: 3
     vol_ident: AUTOUNATTEND
@@ -22,12 +22,12 @@
   kubernetes.core.k8s:
     api_version: v1
     kind: Namespace
-    name: "{{ kubevirt_windows_namespace }}"
+    name: "{{ common_namespace }}"
     state: present
 
 - name: Check if Python HTTP server is running on port 8000
   ansible.builtin.command: lsof -i :8000
-  register: kubevirt_windows_http_server_check
+  register: windows_instance_http_server_check
   ignore_errors: true
   changed_when: false
 
@@ -35,15 +35,15 @@
   ansible.builtin.shell: >
     nohup python3 -m http.server 8000 > /tmp/isos-http.log 2>&1 &
   args:
-    chdir: "{{ role_path }}/files/isos"
+    chdir: "{{ role_path }}/../common/files/isos"
   async: 1000
   poll: 0
-  when: kubevirt_windows_http_server_check.rc != 0
-  changed_when: kubevirt_windows_http_server_check.rc != 0
+  when: windows_instance_http_server_check.rc != 0
+  changed_when: windows_instance_http_server_check.rc != 0
 
 - name: Pick the first 192.* IP address
   ansible.builtin.set_fact:
-    kubevirt_windows_localhost_ip: "{{ ansible_all_ipv4_addresses | select('match', '^192\\.') | list | first }}"
+    windows_instance_localhost_ip: "{{ ansible_all_ipv4_addresses | select('match', '^192\\.') | list | first }}"
 
 # -----------------------------
 # Runtime VM
@@ -54,35 +54,35 @@
 
 - name: Deploy Windows VM
   kubernetes.core.helm:
-    name: "{{ kubevirt_windows_vm_name }}"
+    name: "{{ common_vm_name }}"
     chart_ref: "{{ role_path }}/../../helm"
-    namespace: "{{ kubevirt_windows_namespace }}"
+    namespace: "{{ common_namespace }}"
     values_files:
       - "{{ role_path }}/../../helm/values.yaml"
     values:
-      runStrategy: Once  # Run once to finish setting up VM
-      osDiskURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/golden.img"
-      bootstrapURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/bootstrap.iso"
+      runStrategy: Once # Run once to finish setting up VM
+      osDiskURL: "http://{{ windows_instance_localhost_ip }}:8000/golden.img"
+      bootstrapURL: "http://{{ windows_instance_localhost_ip }}:8000/bootstrap.iso"
       adminPassword: "{{ vault_admin_password }}"
 
 - name: Wait for the VM to enter Succeeded phase
   vars:
-    vmi_name: "{{ kubevirt_windows_vm_name }}-vm"
-  until: kubevirt_windows_vmi_status.resources[0].status.phase == "Succeeded"
+    vmi_name: "{{ common_vm_name }}-vm"
+  until: windows_instance_vmi_status.resources[0].status.phase == "Succeeded"
   retries: 60
   delay: 30
   kubernetes.core.k8s_info:
     api_version: kubevirt.io/v1
     kind: VirtualMachineInstance
-    name: "{{ kubevirt_windows_vm_name }}-vm"
-    namespace: "{{ kubevirt_windows_namespace }}"
-  register: kubevirt_windows_vmi_status
+    name: "{{ common_vm_name }}-vm"
+    namespace: "{{ common_namespace }}"
+  register: windows_instance_vmi_status
 
 - name: Remove secret volume from VM spec after bootstrap
   kubernetes.core.k8s_json_patch:
     kind: VirtualMachine
-    name: "{{ kubevirt_windows_vm_name }}"
-    namespace: "{{ kubevirt_windows_namespace }}"
+    name: "{{ common_vm_name }}"
+    namespace: "{{ common_namespace }}"
     patch:
       # Remove the bootstrap ISO disk
       - op: remove

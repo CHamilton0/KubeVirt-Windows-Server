@@ -1,5 +1,0 @@
----
-- name: Set up Windows VM
-  hosts: localhost
-  roles:
-    - kubevirt_windows

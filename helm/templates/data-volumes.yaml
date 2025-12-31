@@ -2,7 +2,7 @@
 apiVersion: cdi.kubevirt.io/v1beta1
 kind: DataVolume
 metadata:
-  name: "{{ .Release.Name }}-os-dv"
+  name: "os-dv"
 spec:
   source:
     http:
@@ -19,7 +19,7 @@ spec:
 apiVersion: cdi.kubevirt.io/v1beta1
 kind: DataVolume
 metadata:
-  name: "{{ .Release.Name }}-bootstrap-iso"
+  name: "bootstrap-iso"
 spec:
   source:
     http:

@@ -7,12 +7,12 @@
   kubernetes.core.k8s:
     api_version: v1
     kind: Namespace
-    name: "{{ kubevirt_windows_namespace }}"
+    name: "{{ common_namespace }}"
     state: present
 
 - name: Check if Python HTTP server is running on port 8000
   ansible.builtin.command: lsof -i :8000
-  register: kubevirt_windows_http_server_check
+  register: windows_template_http_server_check
   ignore_errors: true
   changed_when: false
 
@@ -20,20 +20,20 @@
   ansible.builtin.shell: >
     nohup python3 -m http.server 8000 > /tmp/isos-http.log 2>&1 &
   args:
-    chdir: "{{ role_path }}/files/isos"
+    chdir: "{{ role_path }}/../common/files/isos"
   async: 1000
   poll: 0
-  when: kubevirt_windows_http_server_check.rc != 0
-  changed_when: kubevirt_windows_http_server_check.rc != 0
+  when: windows_template_http_server_check.rc != 0
+  changed_when: windows_template_http_server_check.rc != 0
 
 - name: Pick the first 192.* IP address
   ansible.builtin.set_fact:
-    kubevirt_windows_localhost_ip: "{{ ansible_all_ipv4_addresses | select('match', '^192\\.') | list | first }}"
+    windows_template_localhost_ip: "{{ ansible_all_ipv4_addresses | select('match', '^192\\.') | list | first }}"
 
 - name: Create Windows Server ISO DataVolume
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ kubevirt_windows_namespace }}"
+    namespace: "{{ common_namespace }}"
     definition:
       apiVersion: cdi.kubevirt.io/v1beta1
       kind: DataVolume
@@ -42,7 +42,7 @@
       spec:
         source:
           http:
-            url: "http://{{ kubevirt_windows_localhost_ip }}:8000/WindowsServer2022.iso"
+            url: "http://{{ windows_template_localhost_ip }}:8000/WindowsServer2022.iso"
         pvc:
           accessModes:
             - ReadWriteOnce
@@ -54,7 +54,7 @@
 - name: Create Virtio drivers DataVolume
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ kubevirt_windows_namespace }}"
+    namespace: "{{ common_namespace }}"
     definition:
       apiVersion: cdi.kubevirt.io/v1beta1
       kind: DataVolume
@@ -63,7 +63,7 @@
       spec:
         source:
           http:
-            url: "http://{{ kubevirt_windows_localhost_ip }}:8000/virtio-win-0.1.285.iso"
+            url: "http://{{ windows_template_localhost_ip }}:8000/virtio-win-0.1.285.iso"
         pvc:
           accessModes:
             - ReadWriteOnce
@@ -75,7 +75,7 @@
 - name: Create Unattend ISO DataVolume
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ kubevirt_windows_namespace }}"
+    namespace: "{{ common_namespace }}"
     definition:
       apiVersion: cdi.kubevirt.io/v1beta1
       kind: DataVolume
@@ -84,7 +84,7 @@
       spec:
         source:
           http:
-            url: "http://{{ kubevirt_windows_localhost_ip }}:8000/unattend.iso"
+            url: "http://{{ windows_template_localhost_ip }}:8000/unattend.iso"
         pvc:
           accessModes:
             - ReadWriteOnce
@@ -96,7 +96,7 @@
 - name: Create OS volume PVC
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ kubevirt_windows_namespace }}"
+    namespace: "{{ common_namespace }}"
     definition:
       apiVersion: v1
       kind: PersistentVolumeClaim
@@ -113,7 +113,7 @@
 - name: Create VM to set up golden image
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ kubevirt_windows_namespace }}"
+    namespace: "{{ common_namespace }}"
     wait: true
     definition:
       apiVersion: kubevirt.io/v1
@@ -192,26 +192,26 @@
 - name: Wait for the VM to enter Succeeded phase
   vars:
     vmi_name: windows-server-2022-installer
-  until: kubevirt_windows_vmi_status.resources[0].status.phase == "Succeeded"
+  until: windows_template_vmi_status.resources[0].status.phase == "Succeeded"
   retries: 60
   delay: 30
   kubernetes.core.k8s_info:
     api_version: kubevirt.io/v1
     kind: VirtualMachineInstance
     name: windows-server-2022-installer
-    namespace: "{{ kubevirt_windows_namespace }}"
-  register: kubevirt_windows_vmi_status
+    namespace: "{{ common_namespace }}"
+  register: windows_template_vmi_status
 
 - name: Create inspect PVC pod
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ kubevirt_windows_namespace }}"
+    namespace: "{{ common_namespace }}"
     definition:
       apiVersion: v1
       kind: Pod
       metadata:
         name: inspect-pvc
-        namespace: "{{ kubevirt_windows_namespace }}"
+        namespace: "{{ common_namespace }}"
       spec:
         containers:
           - name: inspector
@@ -230,20 +230,20 @@
   kubernetes.core.k8s_info:
     kind: Pod
     name: inspect-pvc
-    namespace: "{{ kubevirt_windows_namespace }}"
-  register: kubevirt_windows_inspect_pod
+    namespace: "{{ common_namespace }}"
+  register: windows_template_inspect_pod
   until: >
-    kubevirt_windows_inspect_pod.resources | length > 0 and
-    kubevirt_windows_inspect_pod.resources[0].status.phase == "Running"
+    windows_template_inspect_pod.resources | length > 0 and
+    windows_template_inspect_pod.resources[0].status.phase == "Running"
   retries: 30
   delay: 5
 
 - name: Copy disk.img from pod to local filesystem
   kubernetes.core.k8s_cp:
-    namespace: "{{ kubevirt_windows_namespace }}"
+    namespace: "{{ common_namespace }}"
     pod: inspect-pvc
     remote_path: /mnt/os-pvc/disk.img
-    local_path: "{{ role_path }}/files/isos/golden.img"
+    local_path: "{{ role_path }}/../common/files/isos/golden.img"
     state: from_pod
 
 - name: Remove inspect PVC pod
@@ -251,7 +251,7 @@
     api_version: v1
     kind: Pod
     name: inspect-pvc
-    namespace: "{{ kubevirt_windows_namespace }}"
+    namespace: "{{ common_namespace }}"
     state: absent
 
 - name: Remove installation VM
@@ -259,7 +259,7 @@
     api_version: kubevirt.io/v1
     kind: VirtualMachine
     name: "windows-server-2022-installer"
-    namespace: "{{ kubevirt_windows_namespace }}"
+    namespace: "{{ common_namespace }}"
     state: absent
 
 - name: Remove Windows Server ISO DataVolume
@@ -267,7 +267,7 @@
     api_version: cdi.kubevirt.io/v1beta1
     kind: DataVolume
     name: "windows-server-iso"
-    namespace: "{{ kubevirt_windows_namespace }}"
+    namespace: "{{ common_namespace }}"
     state: absent
 
 - name: Remove Virtio drivers ISO DataVolume
@@ -275,7 +275,7 @@
     api_version: cdi.kubevirt.io/v1beta1
     kind: DataVolume
     name: "virtio-drivers"
-    namespace: "{{ kubevirt_windows_namespace }}"
+    namespace: "{{ common_namespace }}"
     state: absent
 
 - name: Remove Unattended ISO DataVolume
@@ -283,7 +283,7 @@
     api_version: cdi.kubevirt.io/v1beta1
     kind: DataVolume
     name: "unattend-iso"
-    namespace: "{{ kubevirt_windows_namespace }}"
+    namespace: "{{ common_namespace }}"
     state: absent
 
 - name: Remove OS PVC
@@ -291,5 +291,5 @@
     api_version: v1
     kind: PersistentVolumeClaim
     name: "os-pvc"
-    namespace: "{{ kubevirt_windows_namespace }}"
+    namespace: "{{ common_namespace }}"
     state: absent

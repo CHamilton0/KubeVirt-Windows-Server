@@ -6,9 +6,9 @@
 - name: Create unattend ISO for KubeVirt
   community.general.iso_create:
     src_files:
-      - "{{ role_path }}/files/unattend/autounattend.xml"
-      - "{{ role_path }}/files/unattend/Setup"
-    dest_iso: "{{ role_path }}/files/isos/unattend.iso"
+      - "{{ role_path }}/../common/files/unattend/autounattend.xml"
+      - "{{ role_path }}/../common/files/unattend/Setup"
+    dest_iso: "{{ role_path }}/../common/files/isos/unattend.iso"
     interchange_level: 3
     joliet: 3
     vol_ident: AUTOUNATTEND

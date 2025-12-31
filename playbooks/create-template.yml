@@ -1,0 +1,6 @@
+---
+- name: Set up Windows VM template
+  hosts: localhost
+  roles:
+    - common
+    - windows_template
