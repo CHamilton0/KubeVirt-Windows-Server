@@ -1,7 +1,7 @@
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
-  name: {{ .Values.vmName }}
+  name: "{{ .Release.Name }}-vm"
   labels:
     {{ .Values.vmLabels | toYaml | nindent 4 }}
 spec:

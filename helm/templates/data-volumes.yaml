@@ -2,12 +2,11 @@
 apiVersion: cdi.kubevirt.io/v1beta1
 kind: DataVolume
 metadata:
-  name: os-dv
+  name: "{{ .Release.Name }}-os-dv"
 spec:
   source:
     http:
-      url: "{{ .Values.diskImageURL }}"
-      contentType: kubevirt
+      url: "{{ .Values.osDiskURL }}"
   pvc:
     accessModes:
       - ReadWriteOnce
@@ -20,7 +19,7 @@ spec:
 apiVersion: cdi.kubevirt.io/v1beta1
 kind: DataVolume
 metadata:
-  name: bootstrap-iso
+  name: "{{ .Release.Name }}-bootstrap-iso"
 spec:
   source:
     http:
