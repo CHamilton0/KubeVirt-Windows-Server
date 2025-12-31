@@ -62,28 +62,6 @@ if (Test-Path $stateFile) {
 
 switch ($state) {
     "initial-setup" {
-        Write-Host "Installing VirtIO Guest Agent..."
-        
-        # 1. Find the drive containing the VirtIO drivers
-        # We look for the 'guest-agent' folder or the specific MSI
-        $virtioDrive = (Get-PSDrive -PSProvider FileSystem).Root | Where-Object { 
-            Test-Path "$($_.TrimEnd('\'))\guest-agent\qemu-ga-x86_64.msi" 
-        }
-
-        if ($virtioDrive) {
-            $msiPath = "$($virtioDrive.TrimEnd('\'))\guest-agent\qemu-ga-x86_64.msi"
-            Write-Host "Found installer at $msiPath. Installing..."
-            
-            # 2. Run the MSI silently
-            Start-Process msiexec.exe -ArgumentList "/i `"$msiPath`" /qn /norestart" -Wait
-            
-            # 3. Force start the service
-            Start-Sleep -Seconds 5
-            Start-Service QEMU-GA -ErrorAction SilentlyContinue
-        } else {
-            Write-Warning "VirtIO Guest Agent installer not found on any drive."
-        }
-
         Write-Host "Setting computer name..."
 
         $interface = (Get-NetAdapter | Where-Object Status -eq "Up")[0].Name

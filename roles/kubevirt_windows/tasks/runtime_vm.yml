@@ -60,7 +60,7 @@
     values_files:
       - "{{ role_path }}/../../helm/values.yaml"
     values:
-      runStrategy: Always
+      runStrategy: Once
       diskImageURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/golden.img"
       bootstrapURL: "http://{{ kubevirt_windows_localhost_ip }}:8000/bootstrap.iso"
       adminPassword: "{{ vault_admin_password }}"
@@ -84,10 +84,17 @@
     name: "{{ kubevirt_windows_vm_name }}"
     namespace: "{{ kubevirt_windows_namespace }}"
     patch:
+      # Remove the bootstrap ISO disk
+      - op: remove
+        path: /spec/template/spec/domain/devices/disks/1
+      - op: remove
+        path: /spec/template/spec/volumes/1
+      # Remove the secret disk
       - op: remove
         path: /spec/template/spec/domain/devices/disks/2
       - op: remove
         path: /spec/template/spec/volumes/2
+      # Set the VM to always run, this also restarts it
       - op: replace
         path: /spec/runStrategy
         value: "Always"
