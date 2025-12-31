@@ -66,8 +66,6 @@
       adminPassword: "{{ vault_admin_password }}"
 
 - name: Wait for the VM to enter Succeeded phase
-  vars:
-    vmi_name: "{{ common_vm_name }}-vm"
   until: windows_instance_vmi_status.resources[0].status.phase == "Succeeded"
   retries: 60
   delay: 30
@@ -78,23 +76,37 @@
     namespace: "{{ common_namespace }}"
   register: windows_instance_vmi_status
 
-- name: Remove secret volume from VM spec after bootstrap
+- name: Get current VM state
+  kubernetes.core.k8s_info:
+    kind: VirtualMachine
+    name: "{{ common_vm_name }}-vm"
+    namespace: "{{ common_namespace }}"
+  register: current_vm
+
+- name: Build Dynamic Patch Operations
+  set_fact:
+    cleanup_patch: >-
+      {% set ops = [] %}
+      {% set volumes = current_vm.resources[0].spec.template.spec.volumes | default([]) %}
+      {% set targets = [] %}
+      {% for vol in volumes %}
+        {% if vol.name in ['secret-vol', 'bootstrap'] %}
+          {% set _ = targets.append({'index': loop.index0, 'name': vol.name}) %}
+        {% endif %}
+      {% endfor %}
+      {% for target in targets | sort(attribute='index', reverse=True) %}
+        {% set _ = ops.append({'op': 'remove', 'path': '/spec/template/spec/domain/devices/disks/' ~ target.index}) %}
+        {% set _ = ops.append({'op': 'remove', 'path': '/spec/template/spec/volumes/' ~ target.index}) %}
+      {% endfor %}
+      {% if current_vm.resources[0].spec.runStrategy | default('') != 'Always' %}
+        {% set _ = ops.append({'op': 'replace', 'path': '/spec/runStrategy', 'value': 'Always'}) %}
+      {% endif %}
+      {{ ops | to_json }}
+
+- name: Execute Idempotent Dynamic Cleanup
   kubernetes.core.k8s_json_patch:
     kind: VirtualMachine
-    name: "{{ common_vm_name }}"
+    name: "{{ common_vm_name }}-vm"
     namespace: "{{ common_namespace }}"
-    patch:
-      # Remove the bootstrap ISO disk
-      - op: remove
-        path: /spec/template/spec/domain/devices/disks/1
-      - op: remove
-        path: /spec/template/spec/volumes/1
-      # Remove the secret disk
-      - op: remove
-        path: /spec/template/spec/domain/devices/disks/2
-      - op: remove
-        path: /spec/template/spec/volumes/2
-      # Set the VM to always run, this also restarts it
-      - op: replace
-        path: /spec/runStrategy
-        value: "Always"
+    patch: "{{ cleanup_patch | from_json }}"
+  when: (cleanup_patch | from_json | length > 0)
