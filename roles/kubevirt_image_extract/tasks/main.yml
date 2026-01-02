@@ -1,0 +1,44 @@
+---
+- name: Create inspect PVC pod
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ common_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: inspect-pvc
+        namespace: "{{ common_namespace }}"
+      spec:
+        containers:
+          - name: inspector
+            image: busybox
+            command: ["sleep", "3600"]
+            volumeMounts:
+              - name: os-pvc
+                mountPath: /mnt/os-pvc
+        restartPolicy: Never
+        volumes:
+          - name: os-pvc
+            persistentVolumeClaim:
+              claimName: os-pvc
+
+- name: Wait for inspect PVC pod to be ready
+  kubernetes.core.k8s_info:
+    kind: Pod
+    name: inspect-pvc
+    namespace: "{{ common_namespace }}"
+  register: kubevirt_image_extract_pod
+  until: >
+    kubevirt_image_extract_pod.resources | length > 0 and
+    kubevirt_image_extract_pod.resources[0].status.phase == "Running"
+  retries: 30
+  delay: 5
+
+- name: Copy disk.img from pod to local filesystem
+  kubernetes.core.k8s_cp:
+    namespace: "{{ common_namespace }}"
+    pod: inspect-pvc
+    remote_path: /mnt/os-pvc/disk.img
+    local_path: "{{ iso_dir }}/golden.img"
+    state: from_pod

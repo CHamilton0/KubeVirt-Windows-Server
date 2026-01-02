@@ -1,0 +1,20 @@
+---
+- name: Check if Python HTTP server is running on port 8000
+  ansible.builtin.command: lsof -i :8000
+  register: iso_http_server_check
+  ignore_errors: true
+  changed_when: false
+
+- name: Start Python HTTP server to serve ISOs if not running
+  ansible.builtin.shell: >
+    nohup python3 -m http.server 8000 > /tmp/isos-http.log 2>&1 &
+  args:
+    chdir: "{{ iso_dir }}"
+  async: 1000
+  poll: 0
+  when: iso_http_server_check.rc != 0
+  changed_when: iso_http_server_check.rc != 0
+
+- name: Set iso_http_server_ip as the first 192.* IP reachable by VMs
+  ansible.builtin.set_fact:
+    iso_http_server_ip: "{{ ansible_all_ipv4_addresses | select('match', '^192\\.') | list | first }}"

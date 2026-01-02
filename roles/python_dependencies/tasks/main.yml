@@ -1,0 +1,6 @@
+---
+- name: Install Python modules
+  ansible.builtin.pip:
+    name:
+      - kubernetes
+      - pycdlib

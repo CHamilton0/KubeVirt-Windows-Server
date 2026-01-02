@@ -1,0 +1,10 @@
+---
+- name: Create bootstrap ISO for KubeVirt
+  community.general.iso_create:
+    src_files:
+      - "{{ role_path }}/files/bootstrap.ps1"
+    dest_iso: "{{ iso_dir }}/bootstrap.iso"
+    interchange_level: 3
+    joliet: 3
+    vol_ident: AUTOUNATTEND
+    rock_ridge: "1.09"

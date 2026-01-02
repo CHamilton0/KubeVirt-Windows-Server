@@ -1,0 +1,13 @@
+---
+- name: Deploy Windows VM
+  kubernetes.core.helm:
+    name: "{{ common_vm_name }}"
+    chart_ref: "{{ role_path }}/../../helm"
+    namespace: "{{ common_namespace }}"
+    values_files:
+      - "{{ role_path }}/../../helm/values.yaml"
+    values:
+      runStrategy: Once # Run once to finish setting up VM
+      osDiskURL: "http://{{ iso_http_server_ip }}:{{ iso_http_port }}/golden.img"
+      bootstrapURL: "http://{{ iso_http_server_ip }}:{{ iso_http_port }}/bootstrap.iso"
+      adminPassword: "{{ admin_password }}"

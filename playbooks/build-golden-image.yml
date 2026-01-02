@@ -1,0 +1,16 @@
+---
+- name: Set up Windows VM Golden Image
+  hosts: localhost
+  vars:
+    common_namespace: install-vm
+    iso_http_port: 8000
+    iso_dir: "{{ playbook_dir }}/../isos"
+  roles:
+    - python_dependencies
+    - unattend_iso
+    - iso_http_server
+    - kube_namespace
+    - kubevirt_datavolumes
+    - kubevirt_vm_installer
+    - kubevirt_image_extract
+    - kubevirt_cleanup

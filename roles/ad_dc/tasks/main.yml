@@ -1,0 +1,9 @@
+---
+- name: Bootstrap the VM
+  ansible.builtin.include_tasks: deploy.yml
+
+- name: Wait for the install to complete
+  ansible.builtin.include_tasks: wait.yml
+
+- name: Clean up the VM state
+  ansible.builtin.include_tasks: cleanup.yml

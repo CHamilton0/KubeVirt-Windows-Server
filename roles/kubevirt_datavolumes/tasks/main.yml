@@ -1,0 +1,80 @@
+---
+- name: Create Windows Server ISO DataVolume
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ common_namespace }}"
+    definition:
+      apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: windows-server-iso
+      spec:
+        source:
+          http:
+            url: "http://{{ iso_http_server_ip }}:{{ iso_http_port }}/WindowsServer2022.iso"
+        pvc:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Gi
+          storageClassName: local-path
+
+- name: Create Virtio drivers DataVolume
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ common_namespace }}"
+    definition:
+      apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: virtio-drivers
+      spec:
+        source:
+          http:
+            url: "http://{{ iso_http_server_ip }}:{{ iso_http_port }}/virtio-win-0.1.285.iso"
+        pvc:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 2Gi
+          storageClassName: local-path
+
+- name: Create Unattend ISO DataVolume
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ common_namespace }}"
+    definition:
+      apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: unattend-iso
+      spec:
+        source:
+          http:
+            url: "http://{{ iso_http_server_ip }}:{{ iso_http_port }}/unattend.iso"
+        pvc:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Mi
+          storageClassName: local-path
+
+- name: Create OS volume PVC
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ common_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: os-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 60Gi

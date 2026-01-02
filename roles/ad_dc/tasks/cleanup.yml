@@ -1,0 +1,34 @@
+- name: Get current VM state
+  kubernetes.core.k8s_info:
+    kind: VirtualMachine
+    name: "{{ common_vm_name }}-vm"
+    namespace: "{{ common_namespace }}"
+  register: ad_dc_current_vm
+
+- name: Build Dynamic Patch Operations
+  ansible.builtin.set_fact:
+    ad_dc_cleanup_patch: >-
+      {% set ops = [] %}
+      {% set volumes = ad_dc_current_vm.resources[0].spec.template.spec.volumes | default([]) %}
+      {% set targets = [] %}
+      {% for vol in volumes %}
+        {% if vol.name in ['secret-vol', 'bootstrap'] %}
+          {% set _ = targets.append({'index': loop.index0, 'name': vol.name}) %}
+        {% endif %}
+      {% endfor %}
+      {% for target in targets | sort(attribute='index', reverse=True) %}
+        {% set _ = ops.append({'op': 'remove', 'path': '/spec/template/spec/domain/devices/disks/' ~ target.index}) %}
+        {% set _ = ops.append({'op': 'remove', 'path': '/spec/template/spec/volumes/' ~ target.index}) %}
+      {% endfor %}
+      {% if ad_dc_current_vm.resources[0].spec.runStrategy | default('') != 'Always' %}
+        {% set _ = ops.append({'op': 'replace', 'path': '/spec/runStrategy', 'value': 'Always'}) %}
+      {% endif %}
+      {{ ops | to_json }}
+
+- name: Execute Idempotent Dynamic Cleanup
+  kubernetes.core.k8s_json_patch:
+    kind: VirtualMachine
+    name: "{{ common_vm_name }}-vm"
+    namespace: "{{ common_namespace }}"
+    patch: "{{ ad_dc_cleanup_patch | from_json }}"
+  when: (ad_dc_cleanup_patch | from_json | length > 0)

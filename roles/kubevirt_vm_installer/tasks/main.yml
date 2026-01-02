@@ -1,0 +1,92 @@
+---
+- name: Create VM to set up golden image
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ common_namespace }}"
+    wait: true
+    definition:
+      apiVersion: kubevirt.io/v1
+      kind: VirtualMachine
+      metadata:
+        name: "windows-server-2022-installer"
+        labels:
+          kubevirt.io/size: small
+          kubevirt.io/domain: testvm
+      spec:
+        runStrategy: Once
+        template:
+          metadata:
+            labels:
+              kubevirt.io/size: small
+              kubevirt.io/domain: testvm
+          spec:
+            domain:
+              # Remove EFI firmware to use legacy BIOS (SeaBIOS)
+              firmware: {}
+              cpu:
+                cores: 2
+              resources:
+                requests:
+                  memory: 4Gi
+              devices:
+                disks:
+                  # Windows installer ISO (only used on first boot)
+                  - name: windows-iso
+                    cdrom:
+                      bus: sata
+                    bootOrder: 1
+
+                  # VirtIO drivers
+                  - name: virtio-drivers
+                    cdrom:
+                      bus: sata
+
+                  # Unattended install ISO
+                  - name: unattend
+                    cdrom:
+                      bus: sata
+
+                  # OS disk
+                  - name: os-disk
+                    disk:
+                      bus: virtio
+                    bootOrder: 2
+
+                interfaces:
+                  - name: default
+                    masquerade: {}
+                    model: virtio
+
+            volumes:
+              - name: os-disk
+                persistentVolumeClaim:
+                  claimName: os-pvc
+
+              - name: windows-iso
+                dataVolume:
+                  name: windows-server-iso
+
+              - name: virtio-drivers
+                dataVolume:
+                  name: virtio-drivers
+
+              - name: unattend
+                dataVolume:
+                  name: unattend-iso
+
+            networks:
+              - name: default
+                pod: {}
+
+- name: Wait for the VM to enter Succeeded phase
+  vars:
+    vmi_name: windows-server-2022-installer
+  until: kubevirt_vm_installer_status.resources[0].status.phase == "Succeeded"
+  retries: 60
+  delay: 30
+  kubernetes.core.k8s_info:
+    api_version: kubevirt.io/v1
+    kind: VirtualMachineInstance
+    name: windows-server-2022-installer
+    namespace: "{{ common_namespace }}"
+  register: kubevirt_vm_installer_status

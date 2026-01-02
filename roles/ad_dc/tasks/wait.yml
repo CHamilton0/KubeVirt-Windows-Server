@@ -1,0 +1,10 @@
+- name: Wait for the VM to enter Succeeded phase
+  until: ad_dc_vmi_status.resources[0].status.phase == "Succeeded"
+  retries: 60
+  delay: 30
+  kubernetes.core.k8s_info:
+    api_version: kubevirt.io/v1
+    kind: VirtualMachineInstance
+    name: "{{ common_vm_name }}-vm"
+    namespace: "{{ common_namespace }}"
+  register: ad_dc_vmi_status

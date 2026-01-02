@@ -1,0 +1,48 @@
+---
+- name: Remove inspect PVC pod
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Pod
+    name: inspect-pvc
+    namespace: "{{ common_namespace }}"
+    state: absent
+
+- name: Remove installation VM
+  kubernetes.core.k8s:
+    api_version: kubevirt.io/v1
+    kind: VirtualMachine
+    name: "windows-server-2022-installer"
+    namespace: "{{ common_namespace }}"
+    state: absent
+
+- name: Remove Windows Server ISO DataVolume
+  kubernetes.core.k8s:
+    api_version: cdi.kubevirt.io/v1beta1
+    kind: DataVolume
+    name: "windows-server-iso"
+    namespace: "{{ common_namespace }}"
+    state: absent
+
+- name: Remove Virtio drivers ISO DataVolume
+  kubernetes.core.k8s:
+    api_version: cdi.kubevirt.io/v1beta1
+    kind: DataVolume
+    name: "virtio-drivers"
+    namespace: "{{ common_namespace }}"
+    state: absent
+
+- name: Remove Unattended ISO DataVolume
+  kubernetes.core.k8s:
+    api_version: cdi.kubevirt.io/v1beta1
+    kind: DataVolume
+    name: "unattend-iso"
+    namespace: "{{ common_namespace }}"
+    state: absent
+
+- name: Remove OS PVC
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: PersistentVolumeClaim
+    name: "os-pvc"
+    namespace: "{{ common_namespace }}"
+    state: absent

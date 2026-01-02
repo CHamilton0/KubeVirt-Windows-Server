@@ -1,0 +1,17 @@
+---
+- name: Deploy Root Domain Controller
+  hosts: localhost
+  vars:
+    bootstrap_role: root
+    common_namespace: vm
+    common_vm_name: windows-server-2022
+    iso_http_port: 8000
+    iso_dir: "{{ playbook_dir }}/../isos"
+  vars_files:
+    "{{ playbook_dir }}/../secrets/root.enc.yml"
+  roles:
+    - python_dependencies
+    - bootstrap_iso
+    - iso_http_server
+    - kube_namespace
+    - ad_dc
