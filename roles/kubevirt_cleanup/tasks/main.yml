@@ -38,3 +38,16 @@
     name: "unattend-iso"
     namespace: "{{ common_namespace }}"
     state: absent
+
+- name: Mark golden image PVC as read-only
+  kubernetes.core.k8s:
+    state: present
+    kind: PersistentVolumeClaim
+    api_version: v1
+    name: os-pvc
+    namespace: "{{ common_namespace }}"
+    merge_type: merge
+    definition:
+      spec:
+        accessModes:
+          - ReadOnlyMany
