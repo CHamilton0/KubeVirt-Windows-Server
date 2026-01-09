@@ -1,4 +1,49 @@
 ---
+- name: Create admin password secret
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ common_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: "admin-password"
+        labels:
+          app.kubernetes.io/managed-by: Helm
+        annotations:
+          meta.helm.sh/release-name: "{{ common_vm_name }}"
+          meta.helm.sh/release-namespace: "{{ common_namespace }}"
+      type: Opaque
+      stringData:
+        # The key name "admin-password" becomes the filename inside the VM
+        admin-password: "{{ admin_password }}"
+
+- name: Create bootstrap ISO data volume
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ common_namespace }}"
+    definition:
+      apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: "bootstrap-iso"
+        labels:
+          app.kubernetes.io/managed-by: Helm
+        annotations:
+          meta.helm.sh/release-name: "{{ common_vm_name }}"
+          meta.helm.sh/release-namespace: "{{ common_namespace }}"
+      spec:
+        source:
+          http:
+            url: "http://{{ iso_http_server_ip }}:{{ iso_http_port }}/bootstrap.iso"
+        pvc:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: "10Mi"
+          storageClassName: "local-path"
+
 - name: Deploy Windows VM
   kubernetes.core.helm:
     name: "{{ common_vm_name }}"
@@ -6,8 +51,6 @@
     namespace: "{{ common_namespace }}"
     values_files:
       - "{{ role_path }}/../../helm/values.yaml"
+      - "{{ role_path }}/files/values.yaml"
     values:
       runStrategy: Once # Run once to finish setting up VM
-      osDiskURL: "http://{{ iso_http_server_ip }}:{{ iso_http_port }}/golden.img"
-      bootstrapURL: "http://{{ iso_http_server_ip }}:{{ iso_http_port }}/bootstrap.iso"
-      adminPassword: "{{ admin_password }}"

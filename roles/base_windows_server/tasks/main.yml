@@ -1,0 +1,11 @@
+---
+- name: Deploy Windows VM
+  kubernetes.core.helm:
+    name: "{{ common_vm_name }}"
+    chart_ref: "{{ role_path }}/../../helm"
+    namespace: "{{ common_namespace }}"
+    values_files:
+      - "{{ role_path }}/../../helm/values.yaml"
+      - "{{ role_path }}/files/values.yaml"
+    values:
+      runStrategy: Always

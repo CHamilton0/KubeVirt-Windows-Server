@@ -15,20 +15,3 @@ spec:
       requests:
         storage: {{ .Values.storage.osDiskSize }}
     storageClassName: {{ .Values.storageClassName }}
-
----
-apiVersion: cdi.kubevirt.io/v1beta1
-kind: DataVolume
-metadata:
-  name: "bootstrap-iso"
-spec:
-  source:
-    http:
-      url: "{{ .Values.bootstrapURL }}"
-  pvc:
-    accessModes:
-      - ReadWriteOnce
-    resources:
-      requests:
-        storage: {{ .Values.storage.unattendSize }}
-    storageClassName: {{ .Values.storageClassName }}

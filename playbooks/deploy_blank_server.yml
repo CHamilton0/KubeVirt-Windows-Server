@@ -1,0 +1,10 @@
+---
+- name: Deploy Blank Windows Server
+  hosts: localhost
+  vars:
+    common_namespace: blank
+    common_vm_name: windows-server-2022
+  roles:
+    - python_dependencies
+    - kube_namespace
+    - base_windows_server
