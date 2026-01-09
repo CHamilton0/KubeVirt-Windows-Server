@@ -38,11 +38,3 @@
     name: "unattend-iso"
     namespace: "{{ common_namespace }}"
     state: absent
-
-- name: Remove OS PVC
-  kubernetes.core.k8s:
-    api_version: v1
-    kind: PersistentVolumeClaim
-    name: "os-pvc"
-    namespace: "{{ common_namespace }}"
-    state: absent

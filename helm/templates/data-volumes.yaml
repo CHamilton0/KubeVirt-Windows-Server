@@ -5,8 +5,9 @@ metadata:
   name: "os-dv"
 spec:
   source:
-    http:
-      url: "{{ .Values.osDiskURL }}"
+    pvc:
+      name: os-pvc
+      namespace: "install-vm"
   pvc:
     accessModes:
       - ReadWriteOnce
